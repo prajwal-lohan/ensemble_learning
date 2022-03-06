@@ -11,16 +11,17 @@ class DecisionTreeRegressor():
                  max_leaf_nodes=None,
                  min_impurity_decrease=None):
 
-        self.split_feature = None
-        self.split_value = None
-        self.n_samples = None
-        self.impurity_decrease = None
-        self.left_child = None
-        self.right_child = None
-        self.depth = 0
-        self.root = None
-        self.criterion = criterion
-        self.max_depth = max_depth
+        self.split_feature = None  # Feature used to decide the split
+        self.split_value = None  # Value to decide the split
+        self.value = None  # Value assigned (if a leaf node)
+        self.n_samples = None  # Number of samples in the node
+        self.impurity_decrease = None  # Impurity decreased by splitting the node at best feature and value
+        self.left_child = None  # Left child node
+        self.right_child = None  # Right child node
+        self.depth = 0  # Depth of tree till this node
+        self.root = None  # Root node needed when first initialising the tree
+        self.criterion = criterion  # Criterion to find node impurity
+        self.max_depth = max_depth  # Maximum depth allowed for growing the tree
 
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
@@ -93,14 +94,42 @@ class DecisionTreeRegressor():
         self.right_child.grow_tree(X_right, y_right)
 
     def best_split(self, X, y):
+        max_impurity_dec = 0.0
+        split_feature = None
+        split_value = None
+        self.value = np.mean(y)
 
-        return
+        node_impurity = self.node_impurity(y)
 
-    def node_impurity(self, criterion, y):
+        for col in X.shape[1]:
+            col_unique = np.unique(X[:, col])
+            col_means = np.convolve(col_unique, np.ones(2), 'valid') / 2
+            for col_mean in col_means:
+                left_indices = [y[:, col] <= col_mean]
+                right_indices = [y[:, col] > col_mean]
 
-        if criterion == 'mse':
+                y_left = y[left_indices]
+                y_right = y[right_indices]
+
+                impurity_left = self.node_impurity(y_left)
+                impurity_right = self.node_impurity(y_right)
+
+                impurity_dec = node_impurity - ((len(y_left) * impurity_left + (len(y_right) * impurity_right)) / len(y))
+
+                if impurity_dec > max_impurity_dec:
+                    max_impurity_dec = impurity_dec
+                    split_feature = col
+                    split_value = col_mean
+
+        self.split_feature = split_feature
+        self.split_value = split_value
+        self.impurity_decrease = max_impurity_dec  # Used to compare with min_impurity_dec to decide whether to split or not
+
+    def node_impurity(self, y):
+
+        if self.criterion == 'mse':
             return np.mean((y - np.mean(y)) ** 2)
 
-        elif criterion == 'mae':
+        elif self.criterion == 'mae':
             return np.mean(y - np.mean(y))  # todo: is this correct?
         return
