@@ -35,6 +35,9 @@ class DecisionTreeRegressor():
                                           max_depth=self.max_depth,
                                           min_impurity_decrease=self.min_impurity_decrease)
 
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+
         # grow the tree recursively starting from root node
         self.root.grow_tree(X, y)
 
@@ -60,6 +63,8 @@ class DecisionTreeRegressor():
         if self.split_feature is None:
             return
 
+        if (self.min_impurity_decrease is not None) and (self.impurity_decrease < self.min_impurity_decrease):
+            return
         # todo: check impurity decrease condition
 
         # split the tree using this best split
@@ -70,8 +75,8 @@ class DecisionTreeRegressor():
     def split_tree(self, X, y):
 
         # Split X and y according to split_value
-        left_indices = [X[:, self.split_feature <= self.split_value]]
-        right_indices = [X[:, self.split_feature > self.split_value]]
+        left_indices = X[:, self.split_feature] <= self.split_value
+        right_indices = X[:, self.split_feature] > self.split_value
 
         X_left = X[left_indices]
         y_left = y[left_indices]
@@ -101,12 +106,12 @@ class DecisionTreeRegressor():
 
         node_impurity = self.node_impurity(y)
 
-        for col in X.shape[1]:
+        for col in range(X.shape[1]):
             col_unique = np.unique(X[:, col])
             col_means = np.convolve(col_unique, np.ones(2), 'valid') / 2
             for col_mean in col_means:
-                left_indices = [y[:, col] <= col_mean]
-                right_indices = [y[:, col] > col_mean]
+                left_indices = y[:, col] <= col_mean
+                right_indices = y[:, col] > col_mean
 
                 y_left = y[left_indices]
                 y_right = y[right_indices]
@@ -114,7 +119,7 @@ class DecisionTreeRegressor():
                 impurity_left = self.node_impurity(y_left)
                 impurity_right = self.node_impurity(y_right)
 
-                impurity_dec = node_impurity - ((len(y_left) * impurity_left + (len(y_right) * impurity_right)) / len(y))
+                impurity_dec = node_impurity - ((len(y_left) * impurity_left + len(y_right) * impurity_right) / len(y))
 
                 if impurity_dec > max_impurity_dec:
                     max_impurity_dec = impurity_dec
