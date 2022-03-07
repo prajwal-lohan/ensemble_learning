@@ -47,6 +47,8 @@ class DecisionTreeRegressor():
 
     def grow_tree(self, X, y):
 
+        self.value = np.mean(y)
+
         # Stop growing tree according to stopping conditions
         if self.depth >= self.max_depth:
             return
@@ -102,7 +104,6 @@ class DecisionTreeRegressor():
         max_impurity_dec = 0.0
         split_feature = None
         split_value = None
-        self.value = np.mean(y)
 
         node_impurity = self.node_impurity(y)
 
