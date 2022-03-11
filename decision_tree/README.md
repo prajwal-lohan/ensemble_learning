@@ -8,15 +8,15 @@ ___
 ### General overview: how it works
 The output of a call on DecisionTreeClassifier is a dictionary that contains all information relating to a classification decision tree. 
 Everytime a node is split, it will store this information within this dictionary, and this nested dictionary procedure continues until our constraints are met: 
-either we have reached the desired maximum depth of our tree, or the node size is less than our desired minimum size, or the node is completely pure (only contains one class). 
+either we have reached the desired maximum depth of our tree, or the node size is less than our desired minimum size, or the node is completely pure (only contains one class). In this case we have used the Gini coefficient as the criteria to split the nodes, given it is the most popular criterion in the classification case. 
 
-### Criteria
-In this case we have used the Gini coefficient as the criteria to split the nodes, given it is the most popular criterion in the classification case. 
+### Arguments
+- max_depth=None -> The maximum depth the tree can be allowed to grow to. This parameter is useful to prevent over-fitting the tree
+- min_size=None ->  The minimum size of each node. This parameter is also useful to to prevent over-fitting the tree 
 
-### Attributes 
 
 ### Functions
-Below you can find a short description of the functions. 
+Below you can find a short description of all the functions. 
 
 - calculate_gini: this calculates the gini of any node. 
 
