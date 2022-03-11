@@ -54,7 +54,7 @@ based on the best split, decided by the criterion used.
 ### Arguments:
 - criterion='mse' -> Criterion used to minimise the impurity of a node. Can be "mse" for mean square error, or "mae" for mean average error.
 - max_depth=None -> The maximum depth the tree can be allowed to grow to. This parameter is useful to prevent over-fitting the tree
-- min_samples_split=None ->
+- min_samples_split=None -> Minimum number of samples required in a node to consider splitting it.
 - min_impurity_decrease=None -> Minimum decrease in the impurity to consider splitting a node.
 
 

@@ -6,8 +6,7 @@ class DecisionTreeRegressor():
     def __init__(self,
                  criterion='mse',
                  max_depth=None,
-                 min_samples_split=None,
-                 min_samples_leaf=None,
+                 min_samples_split=2,
                  min_impurity_decrease=None):
 
         self.n_features = None  # Number of features in the dataset used for fitting
@@ -22,11 +21,8 @@ class DecisionTreeRegressor():
 
         self.criterion = criterion  # Criterion to find node impurity
         self.max_depth = max_depth  # Maximum depth allowed for growing the tree
-        self.min_samples_split = min_samples_split
-        self.min_samples_leaf = min_samples_leaf
-        self.min_impurity_decrease = min_impurity_decrease
-
-        # todo: add value checks? like passing -ve min_impurity_decrease should not be allowed
+        self.min_samples_split = min_samples_split  # Minimum number of samples in a node to consider splitting further
+        self.min_impurity_decrease = min_impurity_decrease  # Minimum decrease in impurity that must result from splitting a node
 
     def fit(self, X, y):
 
@@ -65,22 +61,16 @@ class DecisionTreeRegressor():
         self.value = np.mean(y)
 
         # Stop growing tree according to stopping conditions
-        if self.depth >= self.max_depth:
+        if ((self.max_depth is not None) and (self.depth >= self.max_depth)) or \
+                ((self.min_samples_split is not None) and (self.n_samples < self.min_samples_split)):
             return
 
         # find best split
         self.best_split(X, y)
 
-        # todo: Question: if for best split, min_samples_leaf is not satisfied for one child,
-        #  but it is satisfied for another case of split (not max impurity decrease), what to do?
-        #  can this situation ever occur?
-
-        if self.split_feature is None:
+        if (self.split_feature is None) or \
+                ((self.min_impurity_decrease is not None) and (self.impurity_decrease < self.min_impurity_decrease)):
             return
-
-        if (self.min_impurity_decrease is not None) and (self.impurity_decrease < self.min_impurity_decrease):
-            return
-        # todo: check impurity decrease condition
 
         # split the tree using this best split
         self.split_tree(X, y)
@@ -102,14 +92,16 @@ class DecisionTreeRegressor():
         # Create left child and grow it recursively
         self.left_child = DecisionTreeRegressor(criterion=self.criterion,
                                                 max_depth=self.max_depth,
-                                                min_impurity_decrease=self.min_impurity_decrease)
+                                                min_impurity_decrease=self.min_impurity_decrease,
+                                                min_samples_split=self.min_samples_split)
         self.left_child.depth = self.depth + 1
         self.left_child.grow_tree(X_left, y_left)
 
         # Create right child and grow it recursively
         self.right_child = DecisionTreeRegressor(criterion=self.criterion,
                                                  max_depth=self.max_depth,
-                                                 min_impurity_decrease=self.min_impurity_decrease)
+                                                 min_impurity_decrease=self.min_impurity_decrease,
+                                                 min_samples_split=self.min_samples_split)
         self.right_child.depth = self.depth + 1
         self.right_child.grow_tree(X_right, y_right)
 
@@ -134,8 +126,6 @@ class DecisionTreeRegressor():
                 impurity_right = self.node_impurity(y_right)
 
                 impurity_dec = node_impurity - ((len(y_left) * impurity_left + len(y_right) * impurity_right) / len(y))
-                # impurity_dec = node_impurity - (impurity_left + impurity_right)
-                # todo: check which one to use
 
                 if impurity_dec > max_impurity_dec:
                     max_impurity_dec = impurity_dec
@@ -152,12 +142,10 @@ class DecisionTreeRegressor():
             return np.mean((y - np.mean(y)) ** 2)
 
         elif self.criterion == 'mae':
-            return np.mean(y - np.mean(y))  # todo: is this correct?
+            return np.mean(y - np.mean(y))
         return
 
     def score(self, y_pred, y_true):
-        if y_pred.shape != y_true.shape:
-            raise ValueError("Prediction values array and true values array must be of same size")
 
         model_var = np.sum(np.square(y_true - y_pred))
         actual_var = np.sum(np.square(y_true - np.mean(y_true)))
