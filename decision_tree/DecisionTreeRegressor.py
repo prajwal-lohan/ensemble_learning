@@ -10,18 +10,18 @@ class DecisionTreeRegressor():
                  min_samples_leaf=None,
                  min_impurity_decrease=None):
 
-        self.n_features = None
+        self.n_features = None  # Number of features in the dataset used for fitting
+        self.n_samples = None  # Number of samples in the node
         self.split_feature = None  # Feature used to decide the split
         self.split_value = None  # Value to decide the split
-        self.value = None  # Value assigned (if a leaf node)
-        self.n_samples = None  # Number of samples in the node
-        self.impurity_decrease = None  # Impurity decreased by splitting the node at best feature and value
+        self.value = None  # Value assigned after fitting
+        self.impurity_decrease = None  # Impurity decreased by splitting the node at split_feature and split_value
         self.left_child = None  # Left child node
         self.right_child = None  # Right child node
-        self.depth = 0  # Depth of tree till this node
+        self.depth = 0  # Depth of tree till this node. Root has depth of 0
+
         self.criterion = criterion  # Criterion to find node impurity
         self.max_depth = max_depth  # Maximum depth allowed for growing the tree
-
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.min_impurity_decrease = min_impurity_decrease
@@ -155,6 +155,20 @@ class DecisionTreeRegressor():
             return np.mean(y - np.mean(y))  # todo: is this correct?
         return
 
+    def score(self, y_pred, y_true):
+        if y_pred.shape != y_true.shape:
+            raise ValueError("Prediction values array and true values array must be of same size")
+
+        model_var = np.sum(np.square(y_true - y_pred))
+        actual_var = np.sum(np.square(y_true - np.mean(y_true)))
+
+        if actual_var == 0.0:
+            if model_var == 0.0:
+                return 1.0
+            else:
+                return 0.0
+
+        return 1.0 - (model_var / actual_var)
 
     def show_tree(self, feature_names):
         if self.n_features is None:
@@ -179,9 +193,8 @@ class DecisionTreeRegressor():
 
         self.add_child_nodes(graph, node_name, feature_names)
 
-        graph.write_png("Decision_Tree.png")
+        graph.write_png("Visualization/Regression_Decision_Tree.png")
 
-    # def add_child_nodes(self):
     def add_child_nodes(self, graph, parent_node_name, feature_names):
         # If no child nodes exist, don't do anything
         if self.split_feature is None:
