@@ -7,8 +7,6 @@ class DecisionTreeRegressor():
                  max_depth=None,
                  min_samples_split=None,
                  min_samples_leaf=None,
-                 random_state=None,
-                 max_leaf_nodes=None,
                  min_impurity_decrease=None):
 
         self.split_feature = None  # Feature used to decide the split
@@ -19,31 +17,42 @@ class DecisionTreeRegressor():
         self.left_child = None  # Left child node
         self.right_child = None  # Right child node
         self.depth = 0  # Depth of tree till this node
-        self.root = None  # Root node needed when first initialising the tree
         self.criterion = criterion  # Criterion to find node impurity
         self.max_depth = max_depth  # Maximum depth allowed for growing the tree
 
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
-        self.random_state = random_state
-        self.max_leaf_nodes = max_leaf_nodes
         self.min_impurity_decrease = min_impurity_decrease
 
+        # todo: add value checks? like passing -ve min_impurity_decrease should not be allowed
+
     def fit(self, X, y):
-        # initialise root node
-        self.root = DecisionTreeRegressor(criterion=self.criterion,
-                                          max_depth=self.max_depth,
-                                          min_impurity_decrease=self.min_impurity_decrease)
 
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
         # grow the tree recursively starting from root node
-        self.root.grow_tree(X, y)
+        self.grow_tree(X, y)
+
 
     def predict(self, X):
 
-        return
+        result = []
+        for row in range(X.shape[0]):
+            # result.append(self.root.predict_one_row(X[row, :]))
+            result.append(self.predict_one_row(X[row, :]))
+
+        return np.array(result)
+
+    def predict_one_row(self, row):
+        if self.split_feature is None:
+            return self.value
+
+        else:
+            if row[self.split_feature] <= self.split_value:
+                return self.left_child.predict_one_row(row)
+            else:
+                return self.right_child.predict_one_row(row)
 
     def grow_tree(self, X, y):
 
@@ -111,8 +120,8 @@ class DecisionTreeRegressor():
             col_unique = np.unique(X[:, col])
             col_means = np.convolve(col_unique, np.ones(2), 'valid') / 2
             for col_mean in col_means:
-                left_indices = y[:, col] <= col_mean
-                right_indices = y[:, col] > col_mean
+                left_indices = X[:, col] <= col_mean
+                right_indices = X[:, col] > col_mean
 
                 y_left = y[left_indices]
                 y_right = y[right_indices]
@@ -121,6 +130,8 @@ class DecisionTreeRegressor():
                 impurity_right = self.node_impurity(y_right)
 
                 impurity_dec = node_impurity - ((len(y_left) * impurity_left + len(y_right) * impurity_right) / len(y))
+                # impurity_dec = node_impurity - (impurity_left + impurity_right)
+                # todo: check which one to use
 
                 if impurity_dec > max_impurity_dec:
                     max_impurity_dec = impurity_dec
