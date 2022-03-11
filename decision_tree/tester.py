@@ -5,17 +5,17 @@ import numpy as np
 from sklearn.datasets import make_moons
 import matplotlib.pyplot as plt
 
-if __name__=="__main__":
-    # # Classification dataset
+if __name__ == "__main__":
+    # # Classification Example
     # N = 1000
     # X, Y = make_moons(N, noise=0.2)
     # plt.scatter(X[:, 0], X[:, 1], c=Y)
     # plt.show()
 
-    # Regression dataset
+    # Regression Example
     N = 200
     X = np.linspace(-1, 1, N)
-    y = X ** 2  # + np.random.normal(0, 0.07, N)
+    y = X ** 2 + np.random.normal(0, 0.07, N)
     X = X.reshape(-1, 1)
     # plt.scatter(X, y,c="b")
     # plt.show()
@@ -39,13 +39,19 @@ if __name__=="__main__":
     # my_pred = reg.predict(X_test)
     # sk_pred = skreg.predict(X_test)
 
-
-    print("My dt result: ", my_pred)
-    print("Sklearn dt result: ", sk_pred)
+    # print("My dt result: ", my_pred)
+    # print("Sklearn dt result: ", sk_pred)
 
     # plt.scatter(X_train, y_train)
     # plt.scatter(X_test, y_test)
 
+    print("R2 score = ",reg.score(my_pred,y))
+    print("sklearn score = ",skreg.score(X,y))
+
     plt.scatter(X, y, c="b", linewidths=0.1)
     plt.plot(X, sk_pred, c="g")
     plt.plot(X, my_pred, c="r")
+    plt.show()
+
+
+    reg.show_tree(["dummy_feature"])
