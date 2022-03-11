@@ -1,4 +1,5 @@
 import numpy as np
+import pydot
 
 
 class DecisionTreeRegressor():
@@ -9,6 +10,7 @@ class DecisionTreeRegressor():
                  min_samples_leaf=None,
                  min_impurity_decrease=None):
 
+        self.n_features = None
         self.split_feature = None  # Feature used to decide the split
         self.split_value = None  # Value to decide the split
         self.value = None  # Value assigned (if a leaf node)
@@ -28,12 +30,15 @@ class DecisionTreeRegressor():
 
     def fit(self, X, y):
 
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
         if y.ndim == 1:
             y = y.reshape(-1, 1)
 
+        self.n_features = X.shape[1]
+
         # grow the tree recursively starting from root node
         self.grow_tree(X, y)
-
 
     def predict(self, X):
 
@@ -56,13 +61,12 @@ class DecisionTreeRegressor():
 
     def grow_tree(self, X, y):
 
+        self.n_samples = X.shape[0]
         self.value = np.mean(y)
 
         # Stop growing tree according to stopping conditions
         if self.depth >= self.max_depth:
             return
-
-        self.n_samples = X.shape[0]
 
         # find best split
         self.best_split(X, y)
@@ -150,3 +154,77 @@ class DecisionTreeRegressor():
         elif self.criterion == 'mae':
             return np.mean(y - np.mean(y))  # todo: is this correct?
         return
+
+
+    def show_tree(self, feature_names):
+        if self.n_features is None:
+            raise ValueError("Decision tree must be fitted before visualizing")
+        if len(feature_names) != self.n_features:
+            raise ValueError(
+                "Length of feature_names should be same as number of features in dataset used for fitting the tree")
+
+        graph = pydot.Dot(graph_type='digraph', strict=True)
+
+        # self.node_num = 0
+        node_name = "root"
+        if self.split_feature is not None:
+            feature_line = str(feature_names[self.split_feature]) + " <= " + str(round(self.split_value, 3)) + "\n"
+        else:
+            feature_line = ""
+        root_label = feature_line + \
+                     "samples = " + str(self.n_samples) + "\n" + "value = " + str(round(self.value, 3))
+
+        root_node = pydot.Node(name=node_name, label=root_label)
+        graph.add_node(root_node)
+
+        self.add_child_nodes(graph, node_name, feature_names)
+
+        graph.write_png("Decision_Tree.png")
+
+    # def add_child_nodes(self):
+    def add_child_nodes(self, graph, parent_node_name, feature_names):
+        # If no child nodes exist, don't do anything
+        if self.split_feature is None:
+            return
+
+        # Children exist
+
+        # Add left child
+        left_node_name = parent_node_name + "_left"
+
+        # Add feature split line in label if left child has further children
+        if self.left_child.split_feature is not None:
+            left_feature_line = str(feature_names[self.left_child.split_feature]) + " <= " + \
+                                str(round(self.left_child.split_value, 3)) + "\n"
+        else:
+            left_feature_line = ""
+
+        left_label = left_feature_line + "samples = " + str(self.left_child.n_samples) + "\n" + "value = " + str(
+            round(self.left_child.value, 3))
+        left_node = pydot.Node(name=left_node_name, label=left_label)
+        graph.add_node(left_node)
+        left_edge = pydot.Edge(parent_node_name, left_node_name)
+        graph.add_edge(left_edge)
+
+        # Add children of left child recursively
+        self.left_child.add_child_nodes(graph, left_node_name, feature_names)
+
+        # Add right child
+        right_node_name = parent_node_name + "_right"
+
+        # Add feature split line in label if right child has further children
+        if self.right_child.split_feature is not None:
+            right_feature_line = str(feature_names[self.right_child.split_feature]) + " <= " + \
+                                 str(round(self.right_child.split_value, 3)) + "\n"
+        else:
+            right_feature_line = ""
+
+        right_label = right_feature_line + "samples = " + str(self.right_child.n_samples) + "\n" + \
+                      "value = " + str(round(self.right_child.value, 3))
+        right_node = pydot.Node(name=right_node_name, label=right_label)
+        graph.add_node(right_node)
+        right_edge = pydot.Edge(parent_node_name, right_node_name)
+        graph.add_edge(right_edge)
+
+        # Add children of right child recursively
+        self.right_child.add_child_nodes(graph, right_node_name, feature_names)
