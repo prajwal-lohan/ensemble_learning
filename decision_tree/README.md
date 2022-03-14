@@ -79,13 +79,21 @@ The function call generates and saves an image like this:
 ### Usage example:
 ```
 from decision_tree.DecisionTreeRegressor import DecisionTreeRegressor
+from sklearn.datasets import load_boston
 
-reg = DecisionTreeRegressor(criterion='mse', max_depth=4)
-reg.fit(X_train, y_train)
+boston = load_boston()
+X, y = boston.data, boston.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+reg = DecisionTreeRegressor(criterion='mse', max_depth=3)
+reg.fit(X, y)
 
 pred = reg.predict(X_test)
+print("R2 score = ", reg.score(pred, y_test))
+
+reg.show_tree(boston.feature_names)
 ```
 
-An example of usage can be found in file "tester.py" under "Regression Example"
+Some more examples of usage can be found in file "tester.py" under "Regression Example"
 
 ___

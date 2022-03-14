@@ -1,4 +1,7 @@
 from decision_tree.DecisionTreeRegressor import DecisionTreeRegressor
+
+# import decision_tree.Classifier as cls
+
 from sklearn import tree
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -12,22 +15,22 @@ if __name__ == "__main__":
     # plt.scatter(X[:, 0], X[:, 1], c=Y)
     # plt.show()
 
-    # Regression Example
+    # Regression Example. Comment out the unwanted dataset
+    # 1st test trial dataset    ####################################
     N = 200
     X = np.linspace(-1, 1, N)
     y = X ** 2 + np.random.normal(0, 0.07, N)
+    ################################################################
 
-    # 2nd test trial dataset
+    # 2nd test trial dataset    ####################################
     X = np.sort(5 * np.random.rand(80, 1), axis=0)
     y = np.sin(X).ravel()
     y[::5] += 3 * (0.5 - np.random.rand(16))
+    ################################################################
 
     X = X.reshape(-1, 1)
-    # plt.scatter(X, y,c="b")
-    # plt.show()
 
     # fit X and y and then predict with sklearn dt and my dt to compare
-
     d = 4
     reg = DecisionTreeRegressor(criterion='mse', max_depth=d)
     skreg = tree.DecisionTreeRegressor(criterion='mse', max_depth=d)
@@ -45,13 +48,19 @@ if __name__ == "__main__":
     plt.plot(X, sk_pred, c="g")
     plt.plot(X, my_pred, c="r")
     plt.show()
-    #
-    reg.show_tree(["dummy_feature"])
+
 
     # Visualizing tree with load_boston dataset
     from sklearn.datasets import load_boston
+
     boston = load_boston()
-    X,y = boston.data, boston.target
+    X, y = boston.data, boston.target
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
     reg = DecisionTreeRegressor(criterion='mse', max_depth=3)
     reg.fit(X, y)
+
+    pred = reg.predict(X_test)
+    print("R2 score = ", reg.score(pred, y_test))
+
     reg.show_tree(boston.feature_names)
