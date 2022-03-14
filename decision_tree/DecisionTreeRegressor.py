@@ -144,7 +144,7 @@ class DecisionTreeRegressor():
             return np.mean((y - np.mean(y)) ** 2)
 
         elif self.criterion == 'mae':
-            return np.mean(y - np.mean(y))
+            return np.mean(np.abs(y - np.mean(y)))
         return
 
     def score(self, y_pred, y_true):
