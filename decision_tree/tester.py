@@ -16,13 +16,21 @@ if __name__ == "__main__":
     N = 200
     X = np.linspace(-1, 1, N)
     y = X ** 2 + np.random.normal(0, 0.07, N)
+
+    # 2nd test trial dataset
+    X = np.sort(5 * np.random.rand(80, 1), axis=0)
+    y = np.sin(X).ravel()
+    y[::5] += 3 * (0.5 - np.random.rand(16))
+
     X = X.reshape(-1, 1)
     # plt.scatter(X, y,c="b")
     # plt.show()
 
     # fit X and y and then predict with sklearn dt and my dt to compare
-    reg = DecisionTreeRegressor(criterion='mse', max_depth=4)
-    skreg = tree.DecisionTreeRegressor(criterion='mse', max_depth=4)
+
+    d = 4
+    reg = DecisionTreeRegressor(criterion='mse', max_depth=d)
+    skreg = tree.DecisionTreeRegressor(criterion='mse', max_depth=d)
 
     reg.fit(X, y)
     skreg.fit(X, y)
@@ -37,5 +45,13 @@ if __name__ == "__main__":
     plt.plot(X, sk_pred, c="g")
     plt.plot(X, my_pred, c="r")
     plt.show()
-
+    #
     reg.show_tree(["dummy_feature"])
+
+    # Visualizing tree with load_boston dataset
+    from sklearn.datasets import load_boston
+    boston = load_boston()
+    X,y = boston.data, boston.target
+    reg = DecisionTreeRegressor(criterion='mse', max_depth=3)
+    reg.fit(X, y)
+    reg.show_tree(boston.feature_names)

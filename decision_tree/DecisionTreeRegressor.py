@@ -37,6 +37,8 @@ class DecisionTreeRegressor():
         self.grow_tree(X, y)
 
     def predict(self, X):
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
 
         result = []
         for row in range(X.shape[0]):
